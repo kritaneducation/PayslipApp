@@ -1,0 +1,8 @@
+pdfplumber
+PyPDF2
+ttkbootstrap
+pytesseract
+Pillow
+python-dateutil
+requests
+requests
