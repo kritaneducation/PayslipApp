@@ -1,4 +1,5 @@
 import hashlib
+import requests
 import tkinter as tk
 import tkinter.simpledialog
 from tkinter import messagebox
@@ -14,6 +15,7 @@ class AuthManager:
 
     def authenticate_user(self):
         self.login_success = False
+        self.user_data = None
         self.login_window = tk.Toplevel(self.root)
         self.login_window.title("Login")
         self.login_window.minsize(340, 340)
@@ -28,12 +30,12 @@ class AuthManager:
         # Title
         tk.Label(self.card, text="LOGIN", font=("Segoe UI", 22, "bold"), fg="white", bg="#18191c").pack(pady=(18, 2))
         tk.Label(self.card, text="Please enter your login and password!", font=("Segoe UI", 11), fg="#b0b0b0", bg="#18191c").pack(pady=(0, 12))
-        # Username
+        # Email
         self.username_entry = tk.Entry(self.card, font=("Segoe UI", 12), fg="#4dc3ff", bg="#23272e", insertbackground="#4dc3ff", relief="flat", highlightthickness=2, highlightbackground="#4dc3ff", highlightcolor="#4dc3ff")
         self.username_entry.pack(pady=6, ipady=6, ipadx=8, fill="x", padx=32)
-        self.username_entry.insert(0, "Username")
-        self.username_entry.bind('<FocusIn>', lambda e: self._clear_placeholder(self.username_entry, "Username"))
-        self.username_entry.bind('<FocusOut>', lambda e: self._restore_placeholder(self.username_entry, "Username"))
+        self.username_entry.insert(0, "Email")
+        self.username_entry.bind('<FocusIn>', lambda e: self._clear_placeholder(self.username_entry, "Email"))
+        self.username_entry.bind('<FocusOut>', lambda e: self._restore_placeholder(self.username_entry, "Email"))
         # Password
         self.password_entry = tk.Entry(self.card, font=("Segoe UI", 12), fg="#4dc3ff", bg="#23272e", insertbackground="#4dc3ff", relief="flat", highlightthickness=2, highlightbackground="#4dc3ff", highlightcolor="#4dc3ff")
         self.password_entry.pack(pady=6, ipady=6, ipadx=8, fill="x", padx=32)
@@ -58,7 +60,7 @@ class AuthManager:
         self.username_entry.focus_set()
         self.login_window.bind('<Return>', lambda e: self._try_login())
         self.login_window.wait_window()
-        return self.login_success
+        return self.login_success, getattr(self, 'user_data', None)
 
     def _clear_placeholder(self, entry, placeholder, is_password=False):
         if entry.get() == placeholder:
@@ -76,14 +78,55 @@ class AuthManager:
         messagebox.showinfo("Forgot Password", "Please contact support to reset your password.")
 
     def _try_login(self):
-        username = self.username_entry.get()
+        email = self.username_entry.get()
         password = self.password_entry.get()
-        if username == self.USERNAME and hashlib.sha256(password.encode()).hexdigest() == self.PASSWORD_HASH:
+
+        # Dev mode: Allow admin/admin login
+        if email == "admin" and password == "admin":
             self.login_success = True
+            self.user_data = {
+                "user": {
+                    "id": "dev-mode",
+                    "email": "admin@dev.local",
+                    "email_confirmed_at": "2025-01-01T00:00:00Z",
+                    "created_at": "2025-01-01T00:00:00Z"
+                },
+                "profile": {
+                    "id": "dev-mode",
+                    "email": "admin@dev.local",
+                    "full_name": "Developer Admin",
+                    "role": "admin"
+                },
+                "licenses": ["Developer License"],
+                "session": {
+                    "access_token": "dev-mode-token",
+                    "refresh_token": "dev-mode-refresh",
+                    "expires_at": 9999999999,
+                    "expires_in": 9999999
+                }
+            }
             if self.login_window.winfo_exists():
                 self.login_window.destroy()
-        else:
-            self.error_label.config(text="Invalid username or password.")
+            return
+
+        # Regular API login
+        try:
+            response = requests.post(
+                "https://kritanpayslipmanager.vercel.app/api/auth/login",
+                json={"email": email, "password": password},
+                timeout=10
+            )
+            if response.status_code == 200 and response.json().get("success"):
+                self.login_success = True
+                self.user_data = response.json().get("data", {})
+                if self.login_window.winfo_exists():
+                    self.login_window.destroy()
+            else:
+                error_msg = response.json().get("message", "Invalid email or password.")
+                self.error_label.config(text=error_msg)
+                self.password_entry.delete(0, 'end')
+        except Exception as e:
+            self.error_label.config(text=f"Login error: {e}")
             self.password_entry.delete(0, 'end')
 
     def _on_close(self):

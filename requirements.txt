@@ -5,4 +5,5 @@ pytesseract
 Pillow
 python-dateutil
 requests
-requests
+python-dotenv
+tkinterdnd2

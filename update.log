@@ -1,0 +1,7 @@
+2025-06-22 18:12:03,175 - update.update_manager - INFO - Checking for updates... Current version: 1.0.0
+2025-06-22 18:14:40,626 - update.update_manager - INFO - Checking for updates... Current version: 1.0.0
+2025-06-22 21:46:21,230 - update.update_manager - INFO - Checking for updates... Current version: 1.0.0
+2025-06-22 22:20:07,282 - update.update_manager - INFO - Checking for updates... Current version: 1.0.0
+2025-06-24 19:34:12,529 - update.update_manager - INFO - Checking for updates... Current version: 1.0.0
+2025-06-24 19:51:31,801 - update.update_manager - INFO - Checking for updates... Current version: 1.0.0, force_check: True
+2025-06-24 19:51:31,801 - update.update_manager - INFO - No update available. Running latest version.
